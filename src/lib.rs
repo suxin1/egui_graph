@@ -416,7 +416,7 @@ impl Graph {
     pub const DEFAULT_ALIGN_GUIDE_STROKE: Option<egui::Stroke> = None;
 
     /// Begin building the new graph widget.
-    pub fn new(id_src: impl egui::AsId) -> Self {
+    pub fn new(id_src: impl egui::AsIdSalt) -> Self {
         Self::from_id(id(id_src))
     }
 
@@ -1607,8 +1607,8 @@ fn paint_selection_area(sel_rect: egui::Rect, graph_id: egui::Id, ui: &egui::Ui)
 }
 
 /// Combines the given id src with the `TypeId` of the `Graph` to produce a unique `egui::Id`.
-pub fn id(id_src: impl egui::AsId) -> egui::Id {
-    egui::Id::new((std::any::TypeId::of::<Graph>(), id_src))
+pub fn id(id_src: impl egui::AsIdSalt) -> egui::Id {
+    egui::Id::unique((std::any::TypeId::of::<Graph>(), id_src))
 }
 
 /// Access the graph's temporary memory for the given graph ID.

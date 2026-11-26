@@ -216,7 +216,7 @@ impl<'a> Edge<'a> {
         // Retrieve the location and direction of the node sockets.
         // If either socket position is unavailable (e.g. sparse explicit
         // layout), skip rendering entirely.
-        let edge_id = ui.id().with(("edge", a, output, b, input));
+        let edge_id = ui.scope_id().with(("edge", a, output, b, input));
         let Some((a_out, b_in)) = ectx.edge_sockets((a, output), (b, input)) else {
             let response = ui.interact(egui::Rect::NOTHING, edge_id, egui::Sense::click());
             return EdgeResponse {
@@ -290,7 +290,7 @@ impl<'a> Edge<'a> {
 
         // Check if the edge was deleted (skip when immutable).
         let mut deleted = false;
-        // FIXME: We may only want to do this if `ui.id()` has focus
+        // FIXME: We may only want to do this if `ui.scope_id()` has focus
         // (Memory::has_focus) or similar, but we still need to setup proper
         // focus-requesting and consider how to handle nodes too.
         if !ectx.immutable && *selected && !ui.ctx().egui_wants_keyboard_input() {
@@ -521,21 +521,37 @@ mod tests {
     /// A point on the straight edge between the output of `A` and the input
     /// of `B`, clear of both nodes.
     fn on_edge() -> egui::Pos2 {
-        egui::pos2(300.0, 100.0 + node_height() / 2.0)
+        egui::pos2(300.0, socket_y())
     }
 
-    /// The height of a node with a single label, as laid out by the graph.
-    fn node_height() -> f32 {
+    /// The y of the sockets of the nodes shown by [`show_edge`], as laid out by
+    /// the graph. Read from the socket response rather than derived from the
+    /// node height, as the sockets are centred on their row, not on the node.
+    fn socket_y() -> f32 {
         let ctx = egui::Context::default();
-        let mut height = None;
-        ctx.run_ui(egui::RawInput::default(), |ui| {
-            let node = Node::from_id(A).outputs(1);
-            let r = node.show_static(ui, |c| c.framed(|ui, _| ui.label("x")));
-            height = Some(r.inner.response.rect.height());
-        })
+        let mut view = View {
+            scene_rect: SCREEN,
+            layout: [(A, egui::pos2(100.0, 100.0)), (B, egui::pos2(400.0, 100.0))].into(),
+        };
+        let mut y = None;
+        ctx.run_ui(
+            egui::RawInput {
+                screen_rect: Some(SCREEN),
+                ..Default::default()
+            },
+            |ui| {
+                Graph::new("graph").show(&mut view, ui, |ui, show| {
+                    show.nodes(ui, |nctx, ui| {
+                        let node = Node::from_id(A).outputs(1);
+                        let r = node.show(nctx, ui, |c| c.framed(|ui, _| ui.label("x")));
+                        y = r.sockets().outputs().next().map(|(_, s)| s.rect.center().y);
+                    });
+                });
+            },
+        )
         .textures_delta
         .clear();
-        height.expect("the node ran")
+        y.expect("A has an output socket")
     }
 
     /// An edge in view paints, and the pointer on it hovers it.

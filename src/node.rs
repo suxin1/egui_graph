@@ -279,7 +279,7 @@ impl Node {
         let max_w = self.max_width.unwrap_or(ui.spacing().text_edit_width);
         let put_size = egui::Vec2::new(max_w, min_size.y);
         let put_rect = egui::Rect::from_min_size(ui.cursor().min, put_size);
-        let graph_id = ui.id();
+        let graph_id = ui.scope_id();
         let egui_id = egui_id(graph_id, self.id);
         let (socket_layer, frame_layer) = sublayers(ui, egui_id, true);
 
@@ -1000,7 +1000,7 @@ mod tests {
         let mut view = crate::View::default();
         let mut enabled = None;
         ctx.run_ui(egui::RawInput::default(), |ui| {
-            crate::Graph::from_id(egui::Id::new("graph"))
+            crate::Graph::from_id(egui::Id::unique("graph"))
                 .immutable(immutable)
                 .show(&mut view, ui, |ui, show| {
                     show.nodes(ui, |nctx, ui| {
@@ -1056,7 +1056,7 @@ mod tests {
         for x in [0.0, 0.0, 100.0] {
             view.layout.insert(NodeId(0), egui::pos2(x, 0.0));
             ctx.run_ui(egui::RawInput::default(), |ui| {
-                crate::Graph::from_id(egui::Id::new("graph")).show(&mut view, ui, |ui, show| {
+                crate::Graph::from_id(egui::Id::unique("graph")).show(&mut view, ui, |ui, show| {
                     show.nodes(ui, |nctx, ui| {
                         let res =
                             Node::from_id(NodeId(0))
@@ -1180,9 +1180,9 @@ mod tests {
                                 (r.rect, r.sockets().output(0).is_some(), r.removed())
                             };
                             let mut b_content_id = None;
-                            Node::from_id(B)
-                                .inputs(1)
-                                .show(nctx, ui, |c| c.framed(|ui, _| b_content_id = Some(ui.id())));
+                            Node::from_id(B).inputs(1).show(nctx, ui, |c| {
+                                c.framed(|ui, _| b_content_id = Some(ui.scope_id()))
+                            });
                             nodes = Some(Pass {
                                 a_ran,
                                 a_rect,

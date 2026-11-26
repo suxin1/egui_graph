@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0](https://github.com/nannou-org/egui_graph/compare/v0.19.1...v0.20.0) - 2026-11-27
+
+### Added
+
+- [**breaking**] update to egui 0.37
+
+### Changed
+
+- [**breaking**] `Graph::new` and `egui_graph::id` take `impl egui::AsIdSalt` (`Hash + Debug`), the bound `egui::Id::unique` now has. Callers passing a `Hash`-only id source need to derive `Debug`.
+
+### Fixed
+
+- stop using the deprecated `Id::new` and `Ui::id`, renamed to `Id::unique` and `Ui::scope_id` in egui 0.37
+- derive the test edge position from the socket layout, rather than assuming sockets sit at the node's vertical centre
+
 ## [0.19.1](https://github.com/nannou-org/egui_graph/compare/v0.19.0...v0.19.1) - 2026-10-25
 
 ### Added
